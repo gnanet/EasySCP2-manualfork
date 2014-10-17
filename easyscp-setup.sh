@@ -9,6 +9,13 @@
 # @link 		http://www.easyscp.net
 # @author 		EasySCP Team
 
+#
+# If the command make does not exist, assume nothing is preinstalled
+#
+
+Preinstalled=make
+command -v $Preinstalled >/dev/null 2>&1 || { echo >&2 "I require at least $Preinstalled but it's not installed. Please check preinstallation requirements in the docs. E.g. for Debian: ./docs/Debian/INSTALL"; echo >&2 "Aborting."; exit 1; }
+
 Auswahl=""
 OS=""
 
