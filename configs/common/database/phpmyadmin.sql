@@ -21,7 +21,7 @@ USE phpmyadmin;
 --
 -- Privileges
 --
--- (activate this statement if necessary)
+-- (activate this statement if necessary) - in Debian7 it is required for PMA to function
 GRANT SELECT, INSERT, DELETE, UPDATE ON `phpmyadmin`.* TO
    'pma'@localhost;
 
