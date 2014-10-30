@@ -12,15 +12,38 @@
 #
 # If the command make does not exist, assume nothing is preinstalled
 #
-
 Preinstalled=make
 command -v $Preinstalled >/dev/null 2>&1 || { echo >&2 "I require at least $Preinstalled but it's not installed. Please check preinstallation requirements in the docs. E.g. for Debian: ./docs/Debian/INSTALL"; echo >&2 "Aborting."; exit 1; }
+
+#
+# find distro routine
+#
+fn_distro() {
+arch=$(uname -m)
+kernel=$(uname -r)
+if [ -f /etc/lsb-release ]; then
+        os=$(lsb_release -s -d)
+elif [ -f /etc/debian_version ]; then
+        os="Debian $(cat /etc/debian_version)"
+elif [ -f /etc/redhat-release ]; then
+        os=`cat /etc/redhat-release`
+else
+        os="$(uname -s) $(uname -r)"
+fi
+        distro=$(echo $os| awk {'print $1'})
+
+}
+
+fn_distro
+
+
 
 Auswahl=""
 OS=""
 
 clear
 
+echo "We detected your OS as $distro"
 echo ""
 echo "1 = CentOS"
 echo ""
