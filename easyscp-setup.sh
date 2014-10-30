@@ -17,25 +17,42 @@ arch=$(uname -m)
 kernel=$(uname -r)
 if [ -f /etc/lsb-release ]; then
         os=$(lsb_release -s -d)
+        distro=$(lsb_release -s -i)
+        distrolc=$(lsb_release -s -i | tr "[:upper:]" "[:lower:]")
+        codename=$(lsb_release -s -r | tr -d '.')
+        preinst="docs/$distro/$distrolc-packages-$codename"
 elif [ -f /etc/debian_version ]; then
         os="Debian $(cat /etc/debian_version)"
+        distro=$(lsb_release -s -i)
+        distrolc=$(lsb_release -s -i | tr "[:upper:]" "[:lower:]")
+        codename=$(lsb_release -s -c)
+        preinst="docs/$distro/$distrolc-packages-$codename"
 elif [ -f /etc/redhat-release ]; then
         os=`cat /etc/redhat-release`
+        distro=$(echo $os| awk {'print $1'})
+        distrolc=$(echo $os| awk {'print $1'} | tr "[:upper:]" "[:lower:]")
+        preinst="docs/$distro/$distrolc-packages"
 else
         os="$(uname -s) $(uname -r)"
-fi
         distro=$(echo $os| awk {'print $1'})
-
+        preinst=""
+        echo >&2 "Your $distro is not apt/yum based please consult the docs..."
+fi
 }
 
-fn_distro
 
 
 #
 # If the command make does not exist, assume nothing is preinstalled
 #
 Preinstalled=make
-command -v $Preinstalled >/dev/null 2>&1 || { echo >&2 "I require at least $Preinstalled but it's not installed. Please check preinstallation requirements in the docs. E.g. for Debian: ./docs/$distro/INSTALL"; echo >&2 "Aborting."; exit 1; }
+command -v $Preinstalled >/dev/null 2>&1 || { 
+	fn_distro;
+	echo >&2 "I require at least $Preinstalled but it's not installed. Please check preinstallation requirements in the docs. E.g. for $distro: ./docs/$distro/INSTALL";
+	echo >&2 "Aborting.";
+	if [ "$preinst" != "" ] && [ -f $preinst ]; then echo "Required packages are in:"; echo $preinst; fi
+	exit 1;
+	}
 
 
 
