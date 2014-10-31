@@ -21,17 +21,20 @@ if [ -f /etc/lsb-release ]; then
         distrolc=$(lsb_release -s -i | tr "[:upper:]" "[:lower:]")
         codename=$(lsb_release -s -r | tr -d '.')
         preinst="docs/$distro/$distrolc-packages-$codename"
+        preinstcmd="cat $preinst | xargs aptitude -y install"
 elif [ -f /etc/debian_version ]; then
         os="Debian $(cat /etc/debian_version)"
         distro=$(lsb_release -s -i)
         distrolc=$(lsb_release -s -i | tr "[:upper:]" "[:lower:]")
         codename=$(lsb_release -s -c)
         preinst="docs/$distro/$distrolc-packages-$codename"
+        preinstcmd="cat $preinst | xargs aptitude -y install"
 elif [ -f /etc/redhat-release ]; then
         os=`cat /etc/redhat-release`
         distro=$(echo $os| awk {'print $1'})
         distrolc=$(echo $os| awk {'print $1'} | tr "[:upper:]" "[:lower:]")
         preinst="docs/$distro/$distrolc-packages"
+        preinstcmd="are listed in the file $preinst"
 else
         os="$(uname -s) $(uname -r)"
         distro=$(echo $os| awk {'print $1'})
@@ -50,13 +53,13 @@ command -v $Preinstalled >/dev/null 2>&1 || {
 	fn_distro;
 	echo >&2 "I require at least $Preinstalled but it's not installed. Please check preinstallation requirements in the docs. E.g. for $distro: ./docs/$distro/INSTALL";
 	echo >&2 "Aborting.";
-	if [ "$preinst" != "" ] && [ -f $preinst ]; then echo "Required packages are in:"; echo $preinst; fi
+	if [ "$preinst" != "" ] && [ -f $preinst ]; then echo "Required packages"; echo $preinstcmd; fi
 	exit 1;
 	}
-
+#
+# Determine php5-cli php.ini location
+#
 phpini=$(php -i | grep php.ini$ | awk -F' => ' {' print $2 '})
-
-
 
 Auswahl=""
 OS=""
