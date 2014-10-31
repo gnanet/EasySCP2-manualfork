@@ -54,6 +54,7 @@ command -v $Preinstalled >/dev/null 2>&1 || {
 	exit 1;
 	}
 
+phpini=$(php -i | grep php.ini$ | awk -F' => ' {' print $2 '})
 
 
 
@@ -142,9 +143,9 @@ do
 			TIMEZONE=`cat /etc/sysconfig/clock | sed "s/^[^\"]*\"//" | sed  "s/\".*//"`
 			echo $TIMEZONE > /etc/timezone
 			TIMEZONE=$(cat /etc/timezone | sed "s/\//\\\\\//g")
-			sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" /etc/php.ini
+			sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" $phpini
 			# TIMEZONE=$((cat /etc/sysconfig/clock) | sed 's/^[^"]*"//' | sed  's/".*//')
-			# sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" /etc/php.ini
+			# sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" $phpini
 
 			#touch /var/log/rkhunter.log
 			#chmod 644 /var/log/rkhunter.log
@@ -235,6 +236,9 @@ do
 
 			echo "Prepare system config"
 
+			TIMEZONE=$(cat /etc/timezone | sed "s/\//\\\\\//g")
+			sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" $phpini
+
 			touch /var/log/rkhunter.log
 			chmod 644 /var/log/rkhunter.log
 
@@ -313,9 +317,9 @@ do
 			TIMEZONE=`cat /etc/sysconfig/clock | sed "s/^[^\"]*\"//" | sed  "s/\".*//"`
 			echo $TIMEZONE > /etc/timezone
 			TIMEZONE=$(cat /etc/timezone | sed "s/\//\\\\\//g")
-			sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" /etc/php.ini
+			sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" $phpini
 			# TIMEZONE=$((cat /etc/sysconfig/clock) | sed 's/^[^"]*"//' | sed  's/".*//')
-			# sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" /etc/php.ini
+			# sed -i".bak" "s/^\;date\.timezone.*$/date\.timezone = \"${TIMEZONE}\" /g" $phpini
 
 			#touch /var/log/rkhunter.log
 			#chmod 644 /var/log/rkhunter.log
