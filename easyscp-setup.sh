@@ -56,6 +56,9 @@ command -v $Preinstalled >/dev/null 2>&1 || {
 	if [ "$preinst" != "" ] && [ -f $preinst ]; then echo "Required packages"; echo $preinstcmd; fi
 	exit 1;
 	}
+
+fn_distro
+
 #
 # Determine php5-cli php.ini location
 #
