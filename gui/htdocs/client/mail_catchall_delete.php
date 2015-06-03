@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -60,7 +60,7 @@ if (isset($_GET['id']) && $_GET['id'] !== '') {
 
 	$rs = exec_query($sql, $query, array($item_delete_status, $mail_id));
 
-	send_request();
+	send_request('130 MAIL '.$dmn_id);
 	write_log($_SESSION['user_logged'].': deletes email catch all!');
 	set_page_message(tr('Catch all account scheduled for deletion!'), 'success');
 	user_goto('mail_catchall.php');

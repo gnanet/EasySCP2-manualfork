@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -26,6 +26,7 @@ class DaemonDomain extends DaemonDomainCommon {
 		switch ($data[0]) {
 			case 'domain':
 				System_Daemon::debug('Starting domain.');
+				$retVal = false;
 				if ($domainData = self::queryDomainDataByDomainID($data[1])) {
 					$retVal = self::handleDomain($domainData);
 					if ($retVal !== true){
@@ -102,7 +103,7 @@ class DaemonDomain extends DaemonDomainCommon {
 				}
 				break;
 			default:
-				System_Daemon::warning("Don' know what to do with " . $data[0]);
+				System_Daemon::warning("Don't know what to do with " . $data[0]);
 		}
 
 		if($reload === true){
@@ -110,7 +111,7 @@ class DaemonDomain extends DaemonDomainCommon {
 			if($retVal !== true){
 				$msg = 'Reload apache config failed';
 				System_Daemon::debug($msg);
-				return $msg . '<br />' . ((DaemonConfig::$cfg->DEBUG == '1') ? DaemonCommon::listArrayforGUI($retVal) : '');
+				return $msg . '<br />' . ((DaemonConfig::$cfg->{'DEBUG'} == '1') ? DaemonCommon::listArrayforGUI($retVal) : '');
 			}
 		}
 
@@ -297,7 +298,7 @@ class DaemonDomain extends DaemonDomainCommon {
 					return $msg . '<br />' . $retVal;
 				}
 
-				$retVal = DaemonDNS::DeleteDomainDNSEntries($domainData['domain_id']);
+				$retVal = DaemonDNS::DeleteAllDomainDNSEntries($domainData['domain_id']);
 				if ($retVal !== true) {
 					$msg = 'Deleting of domain dns entries failed';
 					System_Daemon::warning($msg);
@@ -441,6 +442,13 @@ class DaemonDomain extends DaemonDomainCommon {
 					return $msg . '<br />' . $retVal;
 				}
 
+				$retVal = DaemonDNS::AddDNSEntry($subDomainData);
+				if ($retVal !== true) {
+					$msg = 'Creating of subdomain dns entry failed';
+					System_Daemon::debug($msg);
+					return $msg . '<br />' . $retVal;
+				}
+
 				break;
 			case 'change':
 				$retVal = self::apacheWriteDomainConfig($subDomainData);
@@ -459,6 +467,14 @@ class DaemonDomain extends DaemonDomainCommon {
 					System_Daemon::warning($msg);
 					return $msg . '<br />' . $retVal;
 				}
+
+				$retVal = DaemonDNS::DeleteDNSEntry($subDomainData);
+				if ($retVal !== true) {
+					$msg = 'Deleting of subdomain dns entry failed';
+					System_Daemon::debug($msg);
+					return $msg . '<br />' . $retVal;
+				}
+
 				break;
 			case 'ok':
 				// Configuration has to be rewritten every time to ensure that
@@ -499,6 +515,14 @@ class DaemonDomain extends DaemonDomainCommon {
 					System_Daemon::debug($msg);
 					return $msg . '<br />' . $retVal;
 				}
+
+				$retVal = DaemonDNS::AddDNSEntry($subDomainAliasData);
+				if ($retVal !== true) {
+					$msg = 'Creating of subdomain-alias dns entry failed';
+					System_Daemon::debug($msg);
+					return $msg . '<br />' . $retVal;
+				}
+
 				break;
 			case 'change':
 				$retVal = self::apacheWriteDomainConfig($subDomainAliasData);
@@ -515,6 +539,14 @@ class DaemonDomain extends DaemonDomainCommon {
 					System_Daemon::debug($msg);
 					return $msg . '<br />' . $retVal;
 				}
+
+				$retVal = DaemonDNS::DeleteDNSEntry($subDomainAliasData);
+				if ($retVal !== true) {
+					$msg = 'Deleting of subdomain-alias dns entry failed';
+					System_Daemon::debug($msg);
+					return $msg . '<br />' . $retVal;
+				}
+
 				break;
 			case 'ok':
 				// Configuration has to be rewritten every time to ensure that

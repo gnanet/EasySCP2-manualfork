@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -139,29 +139,20 @@ class DaemonCommon {
 	 * @return boolean.
 	 */
 	public static function systemSetGUIPermissions(){
-		// By default, gui files must be readable by both the panel user (php files are
-		// run under this user) and apache (static files are served by it).
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID, DaemonConfig::$cfg->APACHE_GROUP, '0550', '0440');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0755', '0644');
 
-		// But the following folders must be writable by the panel user, because
-		// php-generated or uploaded files will be stored there.
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/phptmp', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_GROUP, '0750', '0640');
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/themes/**/templates_c', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_GROUP, '0750', '0640');
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/tools/filemanager/temp', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_GROUP, '0750', '0640');
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/tools/webmail/logs', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_GROUP, '0750', '0640');
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/tools/webmail/temp', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_GROUP, '0750', '0640');
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->GUI_ROOT_DIR.'/updates', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_GROUP, '0750', '0640');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/phptmp', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0770', '0640');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/themes/**/templates_c', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0750', '0640');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/tools/filemanager/temp', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0750', '0640');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/tools/webmail/logs', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0750', '0640');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/tools/webmail/temp', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0750', '0640');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->{'GUI_ROOT_DIR'}.'/updates', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, '0750', '0640');
 
 		// Main virtual webhosts directory must be owned by root and readable by all the domain-specific users.
-		self::systemSetFolderPermissions(DaemonConfig::$cfg->APACHE_WWW_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0555);
+		self::systemSetFolderPermissions(DaemonConfig::$cfg->{'APACHE_WWW_DIR'}, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0555);
 
 		// Main fcgid directory must be world-readable, because all the domain-specific users must be able to access its contents.
-		self::systemSetFolderPermissions(DaemonConfig::$cfg->PHP_STARTER_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0555);
-
-		// Required on CentOS
-		if (DaemonConfig::$cfg->DistName == 'CentOS') {
-			self::systemSetFolderPermissions(DaemonConfig::$cfg->PHP_STARTER_DIR.'/master', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID, 0755);
-		}
+		self::systemSetFolderPermissions(DaemonConfig::$cfg->{'PHP_STARTER_DIR'}, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0555);
 
 		return true;
 	}
@@ -179,19 +170,19 @@ class DaemonCommon {
 		// TODO: Remove them when GUI Config has changed to XML
 		// Außerdem wird die Datei beim Schreiben der OldConfig bereits mit den richtigen Rechten versehen, das hier wäre nur für den Notfall falls die Rechte durcheinander geraten sind
 		// easyscp.conf must be world readable because user "vmail" needs to access it.
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/easyscp.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/EasySCP_CMD.xml', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/EasySCP_Config.xml', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/EasySCP_Config_DB.php', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/EasySCP_OS.xml', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/easyscp-keys.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-		self::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/Iana_TLD.xml', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/easyscp.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/EasySCP_CMD.xml', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/EasySCP_Config.xml', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/EasySCP_Config_DB.php', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/EasySCP_OS.xml', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/easyscp-keys.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+		self::systemSetFilePermissions(DaemonConfig::$cfg->{'CONF_DIR'}.'/Iana_TLD.xml', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 
-		self::systemSetFilePermissions('/etc/logrotate.d/easyscp', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+		self::systemSetFilePermissions('/etc/logrotate.d/easyscp', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->DAEMON_ROOT_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, '0700', '0700');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->DAEMON_ROOT_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, '0700', '0700');
 
-		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->SRV_TRAFF_LOG_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, '0700', '0700');
+		self::systemSetPermissionsRecursive(DaemonConfig::$cfg->SRV_TRAFF_LOG_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, '0700', '0700');
 
 		return true;
 	}
@@ -209,9 +200,9 @@ class DaemonCommon {
 	 * @return boolean.
 	 */
 	public static function systemSetPermissionsRecursive($pathName, $user, $group, $dirPerm, $filePerm){
-		exec('find '.$pathName.' -type d -print0 | xargs -r -0 '.DaemonConfig::$cmd->CMD_CHMOD.' '.$dirPerm, $result, $error);
-		exec('find '.$pathName.' -type f -print0 | xargs -r -0 '.DaemonConfig::$cmd->CMD_CHMOD.' '.$filePerm, $result, $error);
-		exec('find '.$pathName.' -print0 | xargs -r -0 '.DaemonConfig::$cmd->CMD_CHOWN.' '.$user.':'.$group, $result, $error);
+		exec('find '.$pathName.' -type d -print0 | xargs -r -0 '.DaemonConfig::$cmd->{'CMD_CHMOD'}.' '.$dirPerm, $result, $error);
+		exec('find '.$pathName.' -type f -print0 | xargs -r -0 '.DaemonConfig::$cmd->{'CMD_CHMOD'}.' '.$filePerm, $result, $error);
+		exec('find '.$pathName.' -print0 | xargs -r -0 '.DaemonConfig::$cmd->{'CMD_CHOWN'}.' '.$user.':'.$group, $result, $error);
 
 		return true;
 	}

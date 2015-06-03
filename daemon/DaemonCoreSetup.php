@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -12,6 +12,9 @@
 
 /**
  * Handles DaemonCoreSetup.
+ *
+ * @param string $Input
+ * @return boolean
  */
 
 function Setup($Input){
@@ -133,13 +136,13 @@ function SetupStopServices(){
 }
 
 function SetupMysqlTest(){
-	$sql = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
+	$sql = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
 
 	try {
 		$connectid = new PDO(
-			'mysql:host='.$sql->DB_HOST.';port=3306',
-			$sql->DB_USER,
-			$sql->DB_PASSWORD,
+			'mysql:host='.$sql->{'DB_HOST'}.';port=3306',
+			$sql->{'DB_USER'},
+			$sql->{'DB_PASSWORD'},
 			array(
 				PDO::ATTR_PERSISTENT => true,
 				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
@@ -149,62 +152,62 @@ function SetupMysqlTest(){
 	catch(PDOException $e){
 		return 'Can´t connect to database. Please check your data and make sure that database is running!';
 	}
-	if ($connectid != '' && !file_exists(DaemonConfig::$cfg->CONF_DIR . '/EasySCP_Config_DB.php')){
-		if ($sql->DB_KEY == 'AUTO' || strlen($sql->DB_KEY) != 32 ){
-			$sql->DB_KEY = DaemonCommon::generatePassword(32);
+	if ($connectid != '' && !file_exists(DaemonConfig::$cfg->{'CONF_DIR'} . '/EasySCP_Config_DB.php')){
+		if ($sql->{'DB_KEY'} == 'AUTO' || strlen($sql->{'DB_KEY'}) != 32 ){
+			$sql->{'DB_KEY'} = DaemonCommon::generatePassword(32);
 		}
-		if ($sql->DB_IV == 'AUTO' || strlen($sql->DB_IV) != 8 ){
-			$sql->DB_IV = DaemonCommon::generatePassword(8);
+		if ($sql->{'DB_IV'} == 'AUTO' || strlen($sql->{'DB_IV'}) != 8 ){
+			$sql->{'DB_IV'} = DaemonCommon::generatePassword(8);
 		}
 		if (extension_loaded('mcrypt')) {
 			$td = @mcrypt_module_open(MCRYPT_BLOWFISH, '', MCRYPT_MODE_CBC, '');
 
 			// Initialize encryption
-			@mcrypt_generic_init($td, $sql->DB_KEY, $sql->DB_IV);
+			@mcrypt_generic_init($td, $sql->{'DB_KEY'}, $sql->{'DB_IV'});
 
 			// Encrypt string
-			$encrypted = @mcrypt_generic($td, $sql->DB_PASSWORD);
+			$encrypted = @mcrypt_generic($td, $sql->{'DB_PASSWORD'});
 			@mcrypt_generic_deinit($td);
 			@mcrypt_module_close($td);
 
-			$sql->DB_PASSWORDENCRYPT = @base64_encode($encrypted);
+			$sql->{'DB_PASSWORDENCRYPT'} = @base64_encode($encrypted);
 		} else {
-			throw new Exception('Error: PHP extension "mcrypt" not loaded!');
+			return 'Error: PHP extension "mcrypt" not loaded!';
 		}
 
 		$tpl_param = array(
-			'DB_HOST'		=> $sql->DB_HOST,
-			'DB_DATABASE'	=> $sql->DB_DATABASE,
-			'DB_USER'		=> $sql->DB_USER,
-			'DB_PASSWORD'	=> $sql->DB_PASSWORDENCRYPT,
-			'DB_KEY'		=> $sql->DB_KEY,
-			'DB_IV'			=> $sql->DB_IV
+			'DB_HOST'		=> $sql->{'DB_HOST'},
+			'DB_DATABASE'	=> $sql->{'DB_DATABASE'},
+			'DB_USER'		=> $sql->{'DB_USER'},
+			'DB_PASSWORD'	=> $sql->{'DB_PASSWORDENCRYPT'},
+			'DB_KEY'		=> $sql->{'DB_KEY'},
+			'DB_IV'			=> $sql->{'DB_IV'}
 		);
 		$tpl = DaemonCommon::getTemplate($tpl_param);
 		$config = $tpl->fetch('tpl/EasySCP_Config_DB.php');
-		$confFile = DaemonConfig::$cfg->CONF_DIR . '/EasySCP_Config_DB.php';
+		$confFile = DaemonConfig::$cfg->{'CONF_DIR'} . '/EasySCP_Config_DB.php';
 		$tpl = NULL;
 		unset($tpl);
 
-		if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+		if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 			return 'Error: Failed to write '.$confFile;
 		}
 
 		$tpl_param = array(
-			'DB_KEY'		=> $sql->DB_KEY,
-			'DB_IV'			=> $sql->DB_IV
+			'DB_KEY'		=> $sql->{'DB_KEY'},
+			'DB_IV'			=> $sql->{'DB_IV'}
 		);
 		$tpl = DaemonCommon::getTemplate($tpl_param);
 		$config = $tpl->fetch('tpl/easyscp-keys.conf');
-		$confFile = DaemonConfig::$cfg->CONF_DIR . '/easyscp-keys.conf';
+		$confFile = DaemonConfig::$cfg->{'CONF_DIR'} . '/easyscp-keys.conf';
 		$tpl = NULL;
 		unset($tpl);
 
-		if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+		if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 			return 'Error: Failed to write '.$confFile;
 		}
 
-		$handle = fopen(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml', "wb");
+		$handle = fopen(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml', "wb");
 		fwrite($handle, $sql->asXML());
 		fclose($handle);
 	}
@@ -215,41 +218,42 @@ function SetupMysqlTest(){
 function SetupEasySCP_Users(){
 
 	// Mailbox user
-	exec(DaemonConfig::$cmd->CMD_ID.' -g '.DaemonConfig::$cfg->MTA_MAILBOX_GID_NAME.' 2>&1', $result, $error);
+	exec(DaemonConfig::$cmd->CMD_ID.' -g '.DaemonConfig::$cfg->{'MTA_MAILBOX_GID_NAME'}.' 2>&1', $result, $error);
 	if ($error != 0){
 		// echo 'MTA Gruppe existiert nicht';
-		exec(DaemonConfig::$cmd->CMD_GROUPADD.' '.DaemonConfig::$cfg->MTA_MAILBOX_GID_NAME.' >> /dev/null 2>&1', $result, $error);
+		exec(DaemonConfig::$cmd->CMD_GROUPADD.' '.DaemonConfig::$cfg->{'MTA_MAILBOX_GID_NAME'}.' >> /dev/null 2>&1', $result, $error);
 		unset($result);
-		exec(DaemonConfig::$cmd->CMD_ID.' -g '.DaemonConfig::$cfg->MTA_MAILBOX_GID_NAME, $result, $error);
+		exec(DaemonConfig::$cmd->CMD_ID.' -g '.DaemonConfig::$cfg->{'MTA_MAILBOX_GID_NAME'}, $result, $error);
 	}
 	DaemonConfig::$cfg->MTA_MAILBOX_GID = $result[0];
 
 	unset($result);
-	exec(DaemonConfig::$cmd->CMD_ID.' -u '.DaemonConfig::$cfg->MTA_MAILBOX_UID_NAME.' 2>&1', $result, $error);
+	exec(DaemonConfig::$cmd->CMD_ID.' -u '.DaemonConfig::$cfg->{'MTA_MAILBOX_UID_NAME'}.' 2>&1', $result, $error);
 	if ($error != 0){
 		// echo 'MTA User existiert nicht';
-		exec(DaemonConfig::$cmd->CMD_USERADD.' -c vmail-user -g '.DaemonConfig::$cfg->MTA_MAILBOX_GID_NAME.' -s /bin/false -r '.DaemonConfig::$cfg->MTA_MAILBOX_UID_NAME.' >> /dev/null 2>&1', $result, $error);
+		exec(DaemonConfig::$cmd->CMD_USERADD.' -c vmail-user -g '.DaemonConfig::$cfg->{'MTA_MAILBOX_GID_NAME'}.' -s /bin/false -r '.DaemonConfig::$cfg->{'MTA_MAILBOX_UID_NAME'}.' >> /dev/null 2>&1', $result, $error);
 		unset($result);
-		exec(DaemonConfig::$cmd->CMD_ID.' -u '.DaemonConfig::$cfg->MTA_MAILBOX_UID_NAME, $result, $error);
+		exec(DaemonConfig::$cmd->CMD_ID.' -u '.DaemonConfig::$cfg->{'MTA_MAILBOX_UID_NAME'}, $result, $error);
 	}
-	DaemonConfig::$cfg->MTA_MAILBOX_MIN_UID = $result[0];
+	DaemonConfig::$cfg->{'MTA_MAILBOX_MIN_UID'} = $result[0];
 	DaemonConfig::$cfg->MTA_MAILBOX_UID = $result[0];
 
 	// FCGI Master user
-	exec(DaemonConfig::$cmd->CMD_ID.' -g '.DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID.' 2>&1', $result, $error);
+	exec(DaemonConfig::$cmd->CMD_ID.' -g '.DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}.' 2>&1', $result, $error);
 	if ($error != 0){
 		// echo 'FCGI Gruppe existiert nicht';
-		exec(DaemonConfig::$cmd->CMD_GROUPADD.' -g '.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID.' '.DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID.' >> /dev/null 2>&1', $result, $error);
+		exec(DaemonConfig::$cmd->CMD_GROUPADD.' -g '.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}.' '.DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}.' >> /dev/null 2>&1', $result, $error);
 	}
 
 	// create user and folder
-	exec(DaemonConfig::$cmd->CMD_ID.' -u '.DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID.' 2>&1', $result, $error);
+	exec(DaemonConfig::$cmd->CMD_ID.' -u '.DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}.' 2>&1', $result, $error);
 	if ($error != 0){
 		// echo 'FCGI User existiert nicht';
-		exec(DaemonConfig::$cmd->CMD_USERADD.' -d '.DaemonConfig::$cfg->PHP_STARTER_DIR.'/master -m -c vu-master -g '.DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID.' -s /bin/false -u '.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID.' '.DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID.' >> /dev/null 2>&1', $result, $error);
+		// exec(DaemonConfig::$cmd->CMD_USERADD.' -d '.DaemonConfig::$cfg->PHP_STARTER_DIR.'/master -m -c vu-master -g '.DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}.' -s /bin/false -u '.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}.' '.DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}.' >> /dev/null 2>&1', $result, $error);
+		exec(DaemonConfig::$cmd->CMD_USERADD . ' -c vu-master -d ' . DaemonConfig::$cfg->{'ROOT_DIR'} . '/gui -g ' . DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'} . ' -s /bin/false -u ' . DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'} . ' ' . DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'} . ' >> /dev/null 2>&1', $result, $error);
 	} else {
 		// echo 'FCGI User existiert';
-		DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR.'/master', DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID, 0755);
+		DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR.'/master', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, 0755);
 	}
 
 	DaemonConfig::Save();
@@ -258,50 +262,50 @@ function SetupEasySCP_Users(){
 }
 
 function EasySCP_Directories(){
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->APACHE_WWW_DIR, DaemonConfig::$cfg->APACHE_USER, DaemonConfig::$cfg->APACHE_GROUP, 0755)){
-		return 'Error: Failed to create '.DaemonConfig::$cfg->APACHE_WWW_DIR;
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->{'APACHE_WWW_DIR'}, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755)){
+		return 'Error: Failed to create '.DaemonConfig::$cfg->{'APACHE_WWW_DIR'};
 	}
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->APACHE_TRAFFIC_LOG_DIR, DaemonConfig::$cfg->APACHE_USER, DaemonConfig::$cfg->APACHE_GROUP, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->APACHE_TRAFFIC_LOG_DIR, DaemonConfig::$cfg->{'APACHE_USER'}, DaemonConfig::$cfg->{'APACHE_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->APACHE_TRAFFIC_LOG_DIR;
 	}
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->APACHE_USERS_LOG_DIR, DaemonConfig::$cfg->APACHE_USER, DaemonConfig::$cfg->APACHE_GROUP, 0755)){
-		return 'Error: Failed to create '.DaemonConfig::$cfg->APACHE_USERS_LOG_DIR;
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->{'APACHE_USERS_LOG_DIR'}, DaemonConfig::$cfg->{'APACHE_USER'}, DaemonConfig::$cfg->{'APACHE_GROUP'}, 0755)){
+		return 'Error: Failed to create '.DaemonConfig::$cfg->{'APACHE_USERS_LOG_DIR'};
 	}
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->APACHE_BACKUP_LOG_DIR, DaemonConfig::$cfg->APACHE_USER, DaemonConfig::$cfg->APACHE_GROUP, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->APACHE_BACKUP_LOG_DIR, DaemonConfig::$cfg->{'APACHE_USER'}, DaemonConfig::$cfg->{'APACHE_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->APACHE_BACKUP_LOG_DIR;
 	}
 
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->FTPD_LOG_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->FTPD_LOG_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->FTPD_LOG_DIR;
 	}
 
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->MTA_VIRTUAL_CONF_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->MTA_VIRTUAL_CONF_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->MTA_VIRTUAL_CONF_DIR;
 	}
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->MTA_VIRTUAL_MAIL_DIR, DaemonConfig::$cfg->MTA_MAILBOX_UID_NAME, DaemonConfig::$cfg->MTA_MAILBOX_GID_NAME, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->MTA_VIRTUAL_MAIL_DIR, DaemonConfig::$cfg->{'MTA_MAILBOX_UID_NAME'}, DaemonConfig::$cfg->{'MTA_MAILBOX_GID_NAME'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->MTA_VIRTUAL_MAIL_DIR;
 	}
 
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->LOG_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->LOG_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->LOG_DIR;
 	}
 
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->SRV_TRAFF_LOG_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0700)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->SRV_TRAFF_LOG_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0700)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->SRV_TRAFF_LOG_DIR;
 	}
 
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->BACKUP_FILE_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->BACKUP_FILE_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->BACKUP_FILE_DIR;
 	}
 
-	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID, 0755)){
+	if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755)){
 		return 'Error: Failed to create '.DaemonConfig::$cfg->PHP_STARTER_DIR;
 	}
 
-	$xml = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
-	if ($xml->AWStats == '_yes_'){
-		if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->AWSTATS_CACHE_DIR, DaemonConfig::$cfg->APACHE_USER, DaemonConfig::$cfg->APACHE_GROUP, 0755)){
-			return 'Error: Failed to create '.DaemonConfig::$cfg->AWSTATS_CACHE_DIR;
+	$xml = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
+	if ($xml->{'AWStats'} == '_yes_'){
+		if (!DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->{'AWSTATS_CACHE_DIR'}, DaemonConfig::$cfg->{'APACHE_USER'}, DaemonConfig::$cfg->{'APACHE_GROUP'}, 0755)){
+			return 'Error: Failed to create '.DaemonConfig::$cfg->{'AWSTATS_CACHE_DIR'};
 		}
 		DaemonConfig::$cfg->AWSTATS_ACTIVE = 'yes';
 	} else {
@@ -316,9 +320,9 @@ function EasySCP_Directories(){
 }
 
 function EasySCP_main_configuration_file(){
-	$xml = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
+	$xml = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
 
-	DaemonConfig::$cfg->BuildDate = '20140816';
+	DaemonConfig::$cfg->BuildDate = '20150218';
 	DaemonConfig::$cfg->DistName = $xml->DistName;
 	DaemonConfig::$cfg->DistVersion = $xml->DistVersion;
 	DaemonConfig::$cfg->DEFAULT_ADMIN_ADDRESS = $xml->PANEL_MAIL;
@@ -357,6 +361,12 @@ function EasySCP_main_configuration_file(){
 		DaemonConfig::$cfg->MYSQL_PREFIX_TYPE = $xml->MySQL_Prefix;
 	}
 
+	// Pfad für rotatelogs des Apache ermitteln
+	unset($result);
+	exec('which rotatelogs 2>&1', $result, $error);
+	if ($error == 0){
+		DaemonConfig::$cfg->APACHE_ROTATELOGS = $result[0];
+	}
 
 	unset($xml);
 
@@ -366,7 +376,7 @@ function EasySCP_main_configuration_file(){
 }
 
 function EasySCP_database(){
-	$sql = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
+	$sql = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
 
 	$connectid = '';
 	try {
@@ -405,7 +415,7 @@ function EasySCP_database(){
 }
 
 function EasySCP_default_SQL_data(){
-	$xml = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
+	$xml = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
 
 	System_Daemon::debug('Inserting primary admin account data...');
 
@@ -538,7 +548,7 @@ function EasySCP_system_resolver(){
 
 function EasySCP_crontab_file(){
 	$tpl_param = array(
-		'ROOT_DIR'		=> DaemonConfig::$cfg->ROOT_DIR,
+		'ROOT_DIR'		=> DaemonConfig::$cfg->{'ROOT_DIR'},
 		'LOG_DIR'		=> DaemonConfig::$cfg->LOG_DIR,
 		'RKHUNTER'		=> DaemonConfig::$cmd->CMD_RKHUNTER,
 		'RKHUNTER_LOG'	=> DaemonConfig::$cfg->RKHUNTER_LOG
@@ -550,7 +560,7 @@ function EasySCP_crontab_file(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -560,7 +570,7 @@ function EasySCP_crontab_file(){
 }
 
 function EasySCP_Powerdns_main_configuration_file(){
-	DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PDNS_DB_DIR.'/', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640);
+	DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PDNS_DB_DIR.'/', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640);
 
 	$pdnsUser = 'powerdns';
 	$pdnsUserPwd = DaemonCommon::generatePassword(18);
@@ -580,7 +590,7 @@ function EasySCP_Powerdns_main_configuration_file(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -594,7 +604,7 @@ function EasySCP_Powerdns_main_configuration_file(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -610,7 +620,7 @@ function EasySCP_Powerdns_main_configuration_file(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -631,7 +641,7 @@ function EasySCP_Powerdns_main_configuration_file(){
 		exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->PDNS_CONF_FILE .' '.DaemonConfig::$cfg->CONF_DIR.'/pdns/backup/pdns.conf'.'_'.date("Y_m_d_H_i_s"), $result, $error);
 	}
 
-	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/pdns/working/pdns.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640);
+	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/pdns/working/pdns.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640);
 	exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/pdns/working/pdns.conf '.DaemonConfig::$cfg->PDNS_CONF_FILE, $result, $error);
 
 	// Creating Powerdns control user account if needed
@@ -776,20 +786,20 @@ function EasySCP_Apache_fcgi_modules_configuration(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
 	// Installing the new file
-	exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.conf '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/fcgid_easyscp.conf', $result, $error);
+	exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.conf '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/fcgid_easyscp.conf', $result, $error);
 
 	switch(DaemonConfig::$cfg->DistName){
 		case 'CentOS':
 			break;
 		default:
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/apache/fcgid_easyscp.load '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.load', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.load', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
-			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.load '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/fcgid_easyscp.load', $result, $error);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.load', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/fcgid_easyscp.load '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/fcgid_easyscp.load', $result, $error);
 	}
 
 	return 'Ok';
@@ -824,7 +834,7 @@ function EasySCP_MTA_configuration_files(){
 		'MTA_VIRTUAL_DMN'		=> DaemonConfig::$cfg->MTA_VIRTUAL_DMN,
 		'MTA_VIRTUAL_MAILBOX'	=> DaemonConfig::$cfg->MTA_VIRTUAL_MAILBOX,
 		'MTA_VIRTUAL_ALIAS'		=> DaemonConfig::$cfg->MTA_VIRTUAL_ALIAS,
-		'MTA_MAILBOX_MIN_UID'	=> DaemonConfig::$cfg->MTA_MAILBOX_MIN_UID,
+		'MTA_MAILBOX_MIN_UID'	=> DaemonConfig::$cfg->{'MTA_MAILBOX_MIN_UID'},
 		'MTA_MAILBOX_UID'		=> DaemonConfig::$cfg->MTA_MAILBOX_UID,
 		'MTA_MAILBOX_GID'		=> DaemonConfig::$cfg->MTA_MAILBOX_GID,
 		'PORT_POSTGREY'			=> DaemonConfig::$cfg->PORT_POSTGREY
@@ -837,7 +847,7 @@ function EasySCP_MTA_configuration_files(){
 	unset($tpl);
 
 	// Storing the new file in working directory
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -867,7 +877,7 @@ function EasySCP_MTA_configuration_files(){
 
 	// Storing the new file in working directory
 	exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/postfix/master_'.DaemonConfig::$cfg->DistVersion.'.cf '.DaemonConfig::$cfg->CONF_DIR.'/postfix/working/master.cf', $result, $error);
-	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/postfix/working/master.cf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/postfix/working/master.cf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 
 	// Installing the new file in production directory
 	exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/postfix/working/master.cf '.DaemonConfig::$cfg->POSTFIX_MASTER_CONF_FILE, $result, $error);
@@ -892,7 +902,7 @@ function EasySCP_MTA_configuration_files(){
 		unset($tpl);
 
 		// Storing the new file in working directory
-		if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+		if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 			return 'Error: Failed to write '.$confFile;
 		}
 
@@ -932,14 +942,14 @@ function EasySCP_MTA_configuration_files(){
 			 * 10-auth.conf
 			 */
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/parts/'.DaemonConfig::$cfg->DistVersion.'/10-auth.conf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf '.DaemonConfig::$cfg->DOVECOT_CONF_DIR.'/conf.d/10-auth.conf', $result, $error);
 
 			/**
 			 * 10-logging.conf
 			 */
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/parts/'.DaemonConfig::$cfg->DistVersion.'/10-logging.conf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf '.DaemonConfig::$cfg->DOVECOT_CONF_DIR.'/conf.d/10-logging.conf', $result, $error);
 
 			/**
@@ -956,7 +966,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -966,7 +976,7 @@ function EasySCP_MTA_configuration_files(){
 			 * 10-master.conf
 			 */
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/parts/'.DaemonConfig::$cfg->DistVersion.'/10-master.conf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf '.DaemonConfig::$cfg->DOVECOT_CONF_DIR.'/conf.d/10-master.conf', $result, $error);
 
 			/**
@@ -982,7 +992,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1003,7 +1013,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1022,7 +1032,7 @@ function EasySCP_MTA_configuration_files(){
 			unset($tpl);
 
 			// Storing the new file in working directory
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1045,7 +1055,7 @@ function EasySCP_MTA_configuration_files(){
 			unset($tpl);
 
 			// Storing the new file in working directory
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1066,7 +1076,7 @@ function EasySCP_MTA_configuration_files(){
 			unset($tpl);
 
 			// Storing the new file in working directory
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1078,14 +1088,14 @@ function EasySCP_MTA_configuration_files(){
 			 * 10-auth.conf
 			 */
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/parts/'.DaemonConfig::$cfg->DistVersion.'/10-auth.conf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-auth.conf '.DaemonConfig::$cfg->DOVECOT_CONF_DIR.'/conf.d/10-auth.conf', $result, $error);
 
 			/**
 			 * 10-logging.conf
 			 */
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/parts/'.DaemonConfig::$cfg->DistVersion.'/10-logging.conf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-logging.conf '.DaemonConfig::$cfg->DOVECOT_CONF_DIR.'/conf.d/10-logging.conf', $result, $error);
 
 			/**
@@ -1102,7 +1112,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1112,7 +1122,7 @@ function EasySCP_MTA_configuration_files(){
 			 * 10-master.conf
 			 */
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/parts/'.DaemonConfig::$cfg->DistVersion.'/10-master.conf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/dovecot/working/10-master.conf '.DaemonConfig::$cfg->DOVECOT_CONF_DIR.'/conf.d/10-master.conf', $result, $error);
 
 			/**
@@ -1128,7 +1138,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1147,7 +1157,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1168,7 +1178,7 @@ function EasySCP_MTA_configuration_files(){
 			$tpl = NULL;
 			unset($tpl);
 
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1187,7 +1197,7 @@ function EasySCP_MTA_configuration_files(){
 			unset($tpl);
 
 			// Storing the new file in working directory
-			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+			if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 				return 'Error: Failed to write '.$confFile;
 			}
 
@@ -1212,11 +1222,11 @@ function EasySCP_MTA_configuration_files(){
 }
 
 function EasySCP_ProFTPd_configuration_file(){
-	$xml = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
+	$xml = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
 
 	// Create config dir if it doesn't exists
 	if (!file_exists(DaemonConfig::$cfg->FTPD_CONF_DIR)){
-		DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->FTPD_CONF_DIR, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755);
+		DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->FTPD_CONF_DIR, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755);
 	}
 
 	// Backup current proftpd.conf if exists
@@ -1240,7 +1250,7 @@ function EasySCP_ProFTPd_configuration_file(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0600 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0600 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -1252,8 +1262,8 @@ function EasySCP_ProFTPd_configuration_file(){
 		'DATABASE_HOST'		=> $xml->DB_HOST,
 		'DATABASE_USER'		=> $xml->FTP_USER,
 		'DATABASE_PASS'		=> $xml->FTP_PASSWORD,
-		'FTPD_MIN_UID'		=> DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID,
-		'FTPD_MIN_GID'		=> DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID
+		'FTPD_MIN_UID'		=> DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'},
+		'FTPD_MIN_GID'		=> DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}
 	);
 
 	$tpl = DaemonCommon::getTemplate($tpl_param);
@@ -1262,7 +1272,7 @@ function EasySCP_ProFTPd_configuration_file(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0600 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0600 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -1272,14 +1282,14 @@ function EasySCP_ProFTPd_configuration_file(){
 	switch(DaemonConfig::$cfg->DistName){
 		case 'Ubuntu':
 			exec(DaemonConfig::$cmd->CMD_CP.' -f '.DaemonConfig::$cfg->CONF_DIR.'/proftpd/parts/modules.conf '.DaemonConfig::$cfg->CONF_DIR.'/proftpd/working/modules.conf', $result, $error);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/proftpd/working/modules.conf', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/proftpd/working/modules.conf', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/proftpd/working/modules.conf '.DaemonConfig::$cfg->FTPD_MODULES_CONF_FILE, $result, $error);
 			break;
 		default:
 	}
 
 	$tpl_param = array(
-			'APACHE_WWW_DIR'	=> DaemonConfig::$cfg->APACHE_WWW_DIR
+			'APACHE_WWW_DIR'	=> DaemonConfig::$cfg->{'APACHE_WWW_DIR'}
 	);
 
 	$tpl = DaemonCommon::getTemplate($tpl_param);
@@ -1288,7 +1298,7 @@ function EasySCP_ProFTPd_configuration_file(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0600 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0600 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -1302,16 +1312,16 @@ function EasySCP_init_scripts(){
 
 	switch(DaemonConfig::$cfg->DistName){
 		case 'CentOS':
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPC, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPD, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPC, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPD, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755);
 
 			exec('/sbin/chkconfig easyscp_control on', $result, $error);
 			exec('/sbin/chkconfig easyscp_daemon on', $result, $error);
 
 			break;
 		default:
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPC, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755);
-			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPD, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPC, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cmd->SRV_EASYSCPD, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0755);
 
 			exec('/usr/sbin/update-rc.d -f easyscp_control remove', $result, $error);
 			exec('/usr/sbin/update-rc.d -f easyscp_daemon remove', $result, $error);
@@ -1325,7 +1335,8 @@ function EasySCP_init_scripts(){
 
 function GUI_PHP(){
 	// Create the fcgi directories tree for the GUI if it doesn't exists
-	DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR.'/master/php5', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0755);
+	DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR.'/master', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, 0555);
+	DaemonCommon::systemCreateDirectory(DaemonConfig::$cfg->PHP_STARTER_DIR.'/master/php5', DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, 0555);
 
 	// PHP5 Starter script
 	// Loading the template from /etc/easyscp/fcgi/parts/master, Building the new file
@@ -1344,7 +1355,7 @@ function GUI_PHP(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID, 0755 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, 0550 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -1357,7 +1368,7 @@ function GUI_PHP(){
 	// and Store the new file in working directory
 
 	$tpl_param = array(
-		'WWW_DIR'			=> DaemonConfig::$cfg->ROOT_DIR,
+		'WWW_DIR'			=> DaemonConfig::$cfg->{'ROOT_DIR'},
 		'DOMAIN_NAME'		=> 'gui',
 		'MAIL_DMN'			=> idn_to_ascii(DaemonConfig::$cfg->BASE_SERVER_VHOST),
 		'CONF_DIR'			=> DaemonConfig::$cfg->CONF_DIR,
@@ -1377,7 +1388,7 @@ function GUI_PHP(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID, DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF.DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID, 0644 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}, DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'}.DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'}, 0440 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
@@ -1416,6 +1427,12 @@ function GUI_PHP(){
 			  }
 			  */
 
+			// Loading the template from /etc/easyscp/php5/parts/, Building the new file
+			// Store the new file in working directory
+			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/php5/parts/suhosin.ini '.DaemonConfig::$cfg->CONF_DIR.'/php5/working/suhosin.ini', $result, $error);
+			DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR.'/php5/working/suhosin.ini', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644);
+
+
 			// Installing the new file in production directory
 			exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/php5/working/suhosin.ini '.DaemonConfig::$cfg->PHP5_CONF_DIR.'/suhosin.ini', $result, $error);
 			break;
@@ -1427,15 +1444,16 @@ function GUI_PHP(){
 
 function GUI_VHOST(){
 	$tpl_param = array(
-		'BASE_SERVER_IP'			=> DaemonConfig::$cfg->BASE_SERVER_IP,
+		'APACHE_LOG_DIR'			=> DaemonConfig::$cfg->APACHE_LOG_DIR,
 		'BASE_PORT'					=> 80,
-		'DEFAULT_ADMIN_ADDRESS'		=> DaemonConfig::$cfg->DEFAULT_ADMIN_ADDRESS,
+		'BASE_SERVER_IP'			=> DaemonConfig::$cfg->BASE_SERVER_IP,
 		'BASE_SERVER_VHOST'			=> idn_to_ascii(DaemonConfig::$cfg->BASE_SERVER_VHOST),
+		'DEFAULT_ADMIN_ADDRESS'		=> DaemonConfig::$cfg->DEFAULT_ADMIN_ADDRESS,
 		'GUI_ROOT_DIR'				=> DaemonConfig::$cfg->GUI_ROOT_DIR,
-		'SUEXEC_UID'				=> DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF . DaemonConfig::$cfg->APACHE_SUEXEC_MIN_UID,
-		'SUEXEC_GID'				=> DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF . DaemonConfig::$cfg->APACHE_SUEXEC_MIN_GID,
 		'PHP_STARTER_DIR'			=> DaemonConfig::$cfg->PHP_STARTER_DIR,
-		'PHP_VERSION'				=> DaemonConfig::$cfg->PHP_VERSION
+		'PHP_VERSION'				=> DaemonConfig::$cfg->PHP_VERSION,
+		'SUEXEC_GID'				=> DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'} . DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_GID'},
+		'SUEXEC_UID'				=> DaemonConfig::$cfg->{'APACHE_SUEXEC_USER_PREF'} . DaemonConfig::$cfg->{'APACHE_SUEXEC_MIN_UID'}
 	);
 
 	if (isset(DaemonConfig::$cfg->BASE_SERVER_IPv6) && DaemonConfig::$cfg->BASE_SERVER_IPv6 != ''){
@@ -1448,17 +1466,17 @@ function GUI_VHOST(){
 	$tpl = NULL;
 	unset($tpl);
 
-	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0644 )){
+	if (!DaemonCommon::systemWriteContentToFile($confFile, $config, DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0644 )){
 		return 'Error: Failed to write '.$confFile;
 	}
 
-	exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/00_master.conf '.DaemonConfig::$cfg->APACHE_SITES_DIR.'/00_master.conf', $result, $error);
+	exec(DaemonConfig::$cmd->CMD_CP.' -pf '.DaemonConfig::$cfg->CONF_DIR.'/apache/working/00_master.conf '.DaemonConfig::$cfg->{'APACHE_SITES_DIR'}.'/00_master.conf', $result, $error);
 
 	return 'Ok';
 }
 
 function GUI_PMA(){
-	$xml = simplexml_load_file(DaemonConfig::$cfg->ROOT_DIR . '/../setup/config.xml');
+	$xml = simplexml_load_file(DaemonConfig::$cfg->{'ROOT_DIR'} . '/../setup/config.xml');
 	$pma = simplexml_load_file(DaemonConfig::$cfg->CONF_DIR . '/tpl/EasySCP_Config_PMA.xml');
 
 	System_Daemon::debug('Building the new pma config file');
@@ -1473,7 +1491,7 @@ function GUI_PMA(){
 	fwrite($handle, $pma->asXML());
 	fclose($handle);
 
-	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR . '/EasySCP_Config_PMA.xml', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640);
+	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR . '/EasySCP_Config_PMA.xml', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640);
 
 	DaemonConfig::SavePMAConfig();
 
@@ -1518,7 +1536,7 @@ function GUI_RoundCube(){
 	fwrite($handle, $rc->asXML());
 	fclose($handle);
 
-	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR . '/EasySCP_Config_RC.xml', DaemonConfig::$cfg->ROOT_USER, DaemonConfig::$cfg->ROOT_GROUP, 0640);
+	DaemonCommon::systemSetFilePermissions(DaemonConfig::$cfg->CONF_DIR . '/EasySCP_Config_RC.xml', DaemonConfig::$cfg->{'ROOT_USER'}, DaemonConfig::$cfg->{'ROOT_GROUP'}, 0640);
 
 	DaemonConfig::SaveRCConfig();
 
@@ -1598,22 +1616,22 @@ function System_cleanup(){
 			unlink(DaemonConfig::$cfg->APACHE_CUSTOM_SITES_CONFIG_DIR.'/easyscp-setup.conf');
 
 			// Disable PHP modul
-			if (file_exists(DaemonConfig::$cfg->APACHE_MODS_DIR.'/php.conf')){
-				// exec('mv '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/php.conf '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/php.conf.disable >> /dev/null 2>&1');
-				exec('cat /dev/null > '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/php.conf >> /dev/null 2>&1');
+			if (file_exists(DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/php.conf')){
+				// exec('mv '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/php.conf '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/php.conf.disable >> /dev/null 2>&1');
+				exec('cat /dev/null > '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/php.conf >> /dev/null 2>&1');
 			}
 
 			// TODO Pruefen ob danach SSL noch geht, scheinbar wird das SSL Modul nicht immer geladen
 			// Disable SSL modul
-			if (file_exists(DaemonConfig::$cfg->APACHE_MODS_DIR.'/ssl.conf')){
-				// exec('mv '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/ssl.conf '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/ssl.conf.disable >> /dev/null 2>&1');
-				exec('cat /dev/null > '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/ssl.conf >> /dev/null 2>&1');
+			if (file_exists(DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/ssl.conf')){
+				// exec('mv '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/ssl.conf '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/ssl.conf.disable >> /dev/null 2>&1');
+				exec('cat /dev/null > '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/ssl.conf >> /dev/null 2>&1');
 			}
 
 			// Disable Welcome page
-			if (file_exists(DaemonConfig::$cfg->APACHE_MODS_DIR.'/welcome.conf')){
-				// exec('mv '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/welcome.conf '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/welcome.conf.disable >> /dev/null 2>&1');
-				exec('cat /dev/null > '.DaemonConfig::$cfg->APACHE_MODS_DIR.'/welcome.conf >> /dev/null 2>&1');
+			if (file_exists(DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/welcome.conf')){
+				// exec('mv '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/welcome.conf '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/welcome.conf.disable >> /dev/null 2>&1');
+				exec('cat /dev/null > '.DaemonConfig::$cfg->{'APACHE_MODS_DIR'}.'/welcome.conf >> /dev/null 2>&1');
 			}
 
 			break;
@@ -1622,7 +1640,7 @@ function System_cleanup(){
 			exec('a2dissite easyscp-setup.conf');
 
 			// Remove Setup vhost
-			unlink(DaemonConfig::$cfg->APACHE_SITES_DIR.'/easyscp-setup.conf');
+			unlink(DaemonConfig::$cfg->{'APACHE_SITES_DIR'}.'/easyscp-setup.conf');
 
 			// Enable GUI vhost (Debian like distributions)
 			exec('a2ensite 00_master.conf');
@@ -1664,8 +1682,8 @@ function System_cleanup(){
 function Setup_Finishing(){
 	exec(DaemonConfig::$cmd->SRV_HTTPD . ' restart');
 
-	unlink(DaemonConfig::$cfg->ROOT_DIR.'/daemon/DaemonCoreSetup.php');
-	exec(DaemonConfig::$cmd->CMD_RM.' -rf '.DaemonConfig::$cfg->ROOT_DIR.'/../setup >> /dev/null 2>&1');
+	unlink(DaemonConfig::$cfg->{'ROOT_DIR'}.'/daemon/DaemonCoreSetup.php');
+	exec(DaemonConfig::$cmd->CMD_RM.' -rf '.DaemonConfig::$cfg->{'ROOT_DIR'}.'/../setup >> /dev/null 2>&1');
 
 	System_Daemon::info('Restart Daemon.');
 	SocketHandler::Close();

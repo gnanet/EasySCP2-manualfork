@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -85,12 +85,12 @@ $tpl->assign(
 		'TR_PAGE_TITLE'				=> tr('EasySCP - Virtual Hosting Control System'),
 		'TR_UPDATES_TITLE'			=> tr('EasySCP updates'),
 		'TR_AVAILABLE_UPDATES'		=> tr('Available EasySCP updates'),
+		'TR_EXECUTE_UPDATE'			=> tr('Execute updates'),
 		'TR_DB_UPDATES_TITLE'		=> tr('Database updates'),
 		'TR_DB_AVAILABLE_UPDATES'	=> tr('Available database updates'),
 		'TR_UPDATE'					=> tr('Update'),
 		'TR_INFOS'					=> tr('Update details'),
-		'TR_MIGRATION_TITLE'		=> tr('Data Migration/Import from other Panels'),
-
+		'TR_MIGRATION_TITLE'		=> tr('Data Migration/Import from other Panels')
 	)
 );
 
@@ -161,8 +161,7 @@ function get_db_update_infos($tpl, $dbUpdate) {
 		$tpl->assign(
 			array(
 				'DB_UPDATE'			=> tr('New Database update is now available'),
-				'DB_INFOS'			=> tr('Do you want to execute the Updates now?'),
-				'TR_EXECUTE_UPDATE'	=> tr('Execute updates')
+				'DB_INFOS'			=> tr('Do you want to execute the Updates now?')
 			)
 		);
 	} else {

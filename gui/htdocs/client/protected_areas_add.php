@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -53,7 +53,9 @@ $tpl->assign(
 		'TR_USER_AUTH'		=> tr('User auth'),
 		'TR_GROUP_AUTH'		=> tr('Group auth'),
 		'TR_AREA_NAME'		=> tr('Area name'),
+		'TR_PROTECT_IT'		=> tr('Protect it'),
 		'TR_UNPROTECT_IT'	=> tr('Unprotect it'),
+		'TR_AREA_NAME'		=> tr('Area name'),
 		'TR_CANCEL'			=> tr('Cancel'),
 		'TR_MANAGE_USRES'	=> tr('Manage users and groups'),
 		'CHOOSE_DIR'		=> tr('Choose dir')

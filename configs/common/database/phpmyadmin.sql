@@ -1,6 +1,6 @@
 --
 -- EasySCP a Virtual Hosting Control Panel
--- Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+-- Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
 --
 -- This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
 -- To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -21,9 +21,9 @@ USE phpmyadmin;
 --
 -- Privileges
 --
--- (activate this statement if necessary) - in Debian7 it is required for PMA to function
-GRANT SELECT, INSERT, DELETE, UPDATE ON `phpmyadmin`.* TO
-   'pma'@localhost;
+-- (activate this statement if necessary)
+-- GRANT SELECT, INSERT, DELETE, UPDATE ON `phpmyadmin`.* TO
+--    'pma'@localhost;
 
 -- --------------------------------------------------------
 
@@ -110,20 +110,6 @@ CREATE TABLE IF NOT EXISTS `pma__recent` (
   PRIMARY KEY (`username`)
 )
   COMMENT='Recently accessed tables'
-  DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `pma__favorite`
---
-
-CREATE TABLE IF NOT EXISTS `pma__favorite` (
-  `username` varchar(64) NOT NULL,
-  `tables` text NOT NULL,
-  PRIMARY KEY (`username`)
-)
-  COMMENT='Favorite tables'
   DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
 
 -- --------------------------------------------------------
@@ -247,68 +233,4 @@ CREATE TABLE IF NOT EXISTS `pma__userconfig` (
   PRIMARY KEY  (`username`)
 )
   COMMENT='User preferences storage for phpMyAdmin'
-  DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `pma__users`
---
-
-CREATE TABLE IF NOT EXISTS `pma__users` (
-  `username` varchar(64) NOT NULL,
-  `usergroup` varchar(64) NOT NULL,
-  PRIMARY KEY (`username`,`usergroup`)
-)
-  COMMENT='Users and their assignments to user groups'
-  DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `pma__usergroups`
---
-
-CREATE TABLE IF NOT EXISTS `pma__usergroups` (
-  `usergroup` varchar(64) NOT NULL,
-  `tab` varchar(64) NOT NULL,
-  `allowed` enum('Y','N') NOT NULL DEFAULT 'N',
-  PRIMARY KEY (`usergroup`,`tab`,`allowed`)
-)
-  COMMENT='User groups with configured menu items'
-  DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `pma__navigationhiding`
---
-
-CREATE TABLE IF NOT EXISTS `pma__navigationhiding` (
-  `username` varchar(64) NOT NULL,
-  `item_name` varchar(64) NOT NULL,
-  `item_type` varchar(64) NOT NULL,
-  `db_name` varchar(64) NOT NULL,
-  `table_name` varchar(64) NOT NULL,
-  PRIMARY KEY (`username`,`item_name`,`item_type`,`db_name`,`table_name`)
-)
-  COMMENT='Hidden items of navigation tree'
-  DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `pma__savedsearches`
---
-
-CREATE TABLE IF NOT EXISTS `pma__savedsearches` (
-  `id` int(5) unsigned NOT NULL auto_increment,
-  `username` varchar(64) NOT NULL default '',
-  `db_name` varchar(64) NOT NULL default '',
-  `search_name` varchar(64) NOT NULL default '',
-  `search_data` text NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `u_savedsearches_username_dbname` (`username`,`db_name`,`search_name`)
-)
-  COMMENT='Saved searches'
   DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;

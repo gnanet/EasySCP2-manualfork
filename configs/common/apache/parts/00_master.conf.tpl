@@ -1,5 +1,5 @@
 # EasySCP a Virtual Hosting Control Panel
-# Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+# Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
 #
 # This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -18,6 +18,9 @@ NameVirtualHost [{$BASE_SERVER_IPv6}]:80
 {/if}
 {if {$BASE_PORT} == 443 }
 NameVirtualHost {$BASE_SERVER_IP}:443
+{if (isset($BASE_SERVER_IPv6))}
+NameVirtualHost [{$BASE_SERVER_IPv6}]:443
+{/if}
 {/if}
 
 {if isset($REDIRECT) && $REDIRECT == true }
@@ -51,6 +54,10 @@ NameVirtualHost {$BASE_SERVER_IP}:443
 {/if}
 {/if}
 
+	ErrorLog {$APACHE_LOG_DIR}/error.log
+
+	CustomLog {$APACHE_LOG_DIR}/access.log combined
+
 	Alias /errors   {$GUI_ROOT_DIR}/errordocs/
 
 	ErrorDocument 401 /errors/401.html
@@ -70,10 +77,17 @@ NameVirtualHost {$BASE_SERVER_IP}:443
 	</IfModule>
 
 	<Directory {$GUI_ROOT_DIR}>
-		Options -Indexes Includes FollowSymLinks MultiViews
+		Options -Indexes +Includes +FollowSymLinks +MultiViews
 		AllowOverride None
-		Order allow,deny
-		Allow from all
+		# Apache 2.2
+		<IfModule !mod_authz_core.c>
+			Order allow,deny
+			Allow from all
+		</IfModule>
+		# Apache 2.4
+		<IfModule mod_authz_core.c>
+			Require all granted
+		</IfModule>
 	</Directory>
 
 	<IfModule mod_fcgid.c>
@@ -83,9 +97,16 @@ NameVirtualHost {$BASE_SERVER_IP}:443
 		</Directory>
 		<Directory "{$PHP_STARTER_DIR}/master">
 			AllowOverride None
-			Options +ExecCGI MultiViews -Indexes
-			Order allow,deny
-			Allow from all
+			Options +ExecCGI +MultiViews -Indexes
+			# Apache 2.2
+			<IfModule !mod_authz_core.c>
+				Order allow,deny
+				Allow from all
+			</IfModule>
+			# Apache 2.4
+			<IfModule mod_authz_core.c>
+				Require all granted
+			</IfModule>
 		</Directory>
 	</IfModule>
 
@@ -124,6 +145,10 @@ NameVirtualHost {$BASE_SERVER_IP}:443
 {/if}
 {/if}
 
+	ErrorLog {$APACHE_LOG_DIR}/error.log
+
+	CustomLog {$APACHE_LOG_DIR}/access.log combined
+
 	Alias /errors   {$GUI_ROOT_DIR}/errordocs/
 
 	ErrorDocument 401 /errors/401.html
@@ -143,10 +168,17 @@ NameVirtualHost {$BASE_SERVER_IP}:443
 	</IfModule>
 
 	<Directory {$GUI_ROOT_DIR}>
-		Options -Indexes Includes FollowSymLinks MultiViews
+		Options -Indexes +Includes +FollowSymLinks +MultiViews
 		AllowOverride None
-		Order allow,deny
-		Allow from all
+		# Apache 2.2
+		<IfModule !mod_authz_core.c>
+			Order deny,allow
+			Allow from all
+		</IfModule>
+		# Apache 2.4
+		<IfModule mod_authz_core.c>
+			Require all granted
+		</IfModule>
 	</Directory>
 
 	<IfModule mod_fcgid.c>
@@ -156,9 +188,16 @@ NameVirtualHost {$BASE_SERVER_IP}:443
 		</Directory>
 		<Directory "{$PHP_STARTER_DIR}/master">
 		AllowOverride None
-		Options +ExecCGI MultiViews -Indexes
-		Order allow,deny
-		Allow from all
+		Options +ExecCGI +MultiViews -Indexes
+		# Apache 2.2
+		<IfModule !mod_authz_core.c>
+			Order deny,allow
+			Allow from all
+		</IfModule>
+		# Apache 2.4
+		<IfModule mod_authz_core.c>
+			Require all granted
+		</IfModule>
 		</Directory>
 	</IfModule>
 

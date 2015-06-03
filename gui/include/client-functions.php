@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2010 by ispCP | http://isp-control.net
- * @copyright 	2010-2012 by Easy Server Control Panel - http://www.easyscp.net
+ * @copyright 	2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  * @version 	SVN: $Id$
  * @link 		http://www.easyscp.net
  * @author 		EasySCP Team
@@ -365,7 +365,9 @@ function get_domain_running_sql_acc_cnt($sql, $domain_id) {
 	return array($sqld_acc_cnt, $sqlu_acc_cnt);
 }
 
-function get_domain_running_props_cnt($sql, $domain_id) {
+function get_domain_running_props_cnt($domain_id) {
+
+	$sql = EasySCP_Registry::get('Db');
 
 	$sub_cnt = get_domain_running_sub_cnt($sql, $domain_id);
 	$als_cnt = get_domain_running_als_cnt($sql, $domain_id);
@@ -931,7 +933,9 @@ function mount_point_exists($dmn_id, $mnt_point) {
 	return false;
 }
 
-function get_user_domain_ip($sql, $dmn_ip_id) {
+function get_user_domain_ip($dmn_ip_id) {
+
+	$sql = EasySCP_Registry::get('Db');
 
 	$query = "
 		SELECT

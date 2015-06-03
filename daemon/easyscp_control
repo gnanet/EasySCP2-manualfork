@@ -3,7 +3,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -63,7 +63,7 @@ ControlIPT::$logLocation = $options['logLocation'];
 // ControlIPT::Add();
 
 try {
-	SocketHandler::$File = DaemonConfig::$cfg->SOCK_EASYSCPC;
+	SocketHandler::$File = DaemonConfig::$cfg->{'SOCK_EASYSCPC'};
 	SocketHandler::Create();
 	SocketHandler::Bind();
 	SocketHandler::Listen();
@@ -89,12 +89,14 @@ while (!System_Daemon::isDying() && $runningOkay) {
 		} else {
 			System_Daemon::info('Running "ApacheRestart" subprocess.');
 
-			switch(DaemonConfig::$cfg->DistName){
+			switch (DaemonConfig::$cfg->DistName) {
 				case 'CentOS':
-					exec(DaemonConfig::$cmd->SRV_HTTPD . ' graceful 1>&1 2>&1', $result, $error);
+					// exec(DaemonConfig::$cmd->{'SRV_HTTPD'} . ' graceful 1>&1 2>&1', $result, $error);
+					exec('service httpd restart 1>&1 2>&1', $result, $error);
 					break;
 				default:
-					exec(DaemonConfig::$cmd->CMD_HTTPD_CTL . ' graceful 1>&1 2>&1', $result, $error);
+					// exec(DaemonConfig::$cmd->{'CMD_HTTPD_CTL'} . ' graceful 1>&1 2>&1', $result, $error);
+					exec('service apache2 restart 1>&1 2>&1', $result, $error);
 			}
 
 			unset($ApacheRestart);

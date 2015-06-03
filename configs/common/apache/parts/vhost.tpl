@@ -34,7 +34,7 @@
 	SSLCACertificateFile {$SSL_CERT_DIR}/easyscp_{$MASTER_DOMAIN}-cacert.pem
 	{/if}
 {/if}
-	
+
 	ErrorLog {$WWW_DIR}/{$DOC_ROOT}/logs/{$SERVER_NAME}-error.log
 
 	CustomLog {$APACHE_LOG_DIR}/users/{$SERVER_NAME}-access.log combined
@@ -67,8 +67,15 @@
 	ProxyRequests Off
 
 	<Proxy *>
-		Order deny,allow
-		Allow from all
+		# Apache 2.2
+		<IfModule !mod_authz_core.c>
+			Order deny,allow
+			Allow from all
+		</IfModule>
+		# Apache 2.4
+		<IfModule mod_authz_core.c>
+			Require all granted
+		</IfModule>
 	</Proxy>
 
 	ProxyPass			/stats  http://localhost/stats/{$SERVER_NAME}
@@ -92,18 +99,32 @@
 	<Directory {$WWW_DIR}/{$DOC_ROOT}/cgi-bin>
 		AllowOverride AuthConfig
 		#Options ExecCGI
-		Order allow,deny
-		Allow from all
+		# Apache 2.2
+		<IfModule !mod_authz_core.c>
+			Order deny,allow
+			Allow from all
+		</IfModule>
+		# Apache 2.4
+		<IfModule mod_authz_core.c>
+			Require all granted
+		</IfModule>
 	</Directory>
 {/if}
 
 	DirectoryIndex index.php index.htm index.html
 
 	<Directory {$WWW_DIR}/{$DOC_ROOT}/htdocs>
-		Options -Indexes Includes FollowSymLinks MultiViews
+		Options -Indexes +Includes +FollowSymLinks +MultiViews
 		AllowOverride All
-		Order allow,deny
-		Allow from all
+		# Apache 2.2
+		<IfModule !mod_authz_core.c>
+			Order deny,allow
+			Allow from all
+		</IfModule>
+		# Apache 2.4
+        <IfModule mod_authz_core.c>
+        	Require all granted
+        </IfModule>
 	</Directory>
 
 {if isset($DOMAIN_PHP) && $DOMAIN_PHP == true}
@@ -114,9 +135,16 @@
 		</Directory>
 		<Directory "{$PHP_STARTER_DIR}/{$MASTER_DOMAIN}">
 			AllowOverride None
-			Options +ExecCGI MultiViews -Indexes
-			Order allow,deny
-			Allow from all
+			Options +ExecCGI +MultiViews -Indexes
+			# Apache 2.2
+			<IfModule !mod_authz_core.c>
+				Order deny,allow
+				Allow from all
+			</IfModule>
+			# Apache 2.4
+			<IfModule mod_authz_core.c>
+				Require all granted
+			</IfModule>
 		</Directory>
 	</IfModule>
 {/if}

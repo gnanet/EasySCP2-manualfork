@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2010 by ispCP | http://isp-control.net
- * @copyright 	2010-2012 by Easy Server Control Panel - http://www.easyscp.net
+ * @copyright 	2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  * @version 	SVN: $Id$
  * @link 		http://www.easyscp.net
  * @author 		EasySCP Team
@@ -59,7 +59,7 @@ function read_line(&$socket) {
  * @return string Daemon answer
  * @todo Remove error operator
  */
-function send_request($execute = 'legacy') {
+function send_request($execute) {
 
 	// @$socket = socket_create (AF_INET, SOCK_STREAM, 0);
 	@$socket = socket_create (AF_UNIX, SOCK_STREAM, 0);

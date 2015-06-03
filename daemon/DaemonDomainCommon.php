@@ -1,7 +1,7 @@
 <?php
 /**
  * EasySCP a Virtual Hosting Control Panel
- * Copyright (C) 2010-2014 by Easy Server Control Panel - http://www.easyscp.net
+ * Copyright (C) 2010-2015 by Easy Server Control Panel - http://www.easyscp.net
  *
  * This work is licensed under the Creative Commons Attribution-NoDerivs 3.0 Unported License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/3.0/.
@@ -519,7 +519,7 @@ class DaemonDomainCommon {
 	protected static function deleteAliasSubDomain($aliasSubDomainData) {
 
 		$fqdn = $aliasSubDomainData['subdomain_name'] . "." . $aliasSubDomainData['alias_name'];
-		$confFile = DaemonConfig::$cfg->APACHE_CUSTOM_SITES_CONFIG_DIR . "/$fqdn.conf";
+		$confFile = DaemonConfig::$cfg->APACHE_CUSTOM_SITES_CONFIG_DIR . "/$fqdn.custom";
 		$retVal = unlink($confFile);
 		if ($retVal !== true ) {
 			$msg = 'Failed to delete ' .$confFile;
@@ -632,14 +632,14 @@ class DaemonDomainCommon {
 	protected static function deleteSubDomain($subDomainData) {
 		$returnOk = true;
 		//delete directories
-		$homeDir = DaemonConfig::$cfg->APACHE_WWW_DIR . "/" . $subDomainData['domain_name'] . "/" . $subDomainData['mount'];
+		$homeDir = DaemonConfig::$cfg->APACHE_WWW_DIR . "/" . $subDomainData['domain_name'] . $subDomainData['mount'];
 		$cmd = DaemonConfig::$cmd->CMD_RM . " -rf $homeDir";
 		System_Daemon::debug($cmd);
 		exec($cmd);
 		System_Daemon::warning("Deleted $homeDir");
 
 		$fqdn = $subDomainData['subdomain_name'] . "." . $subDomainData['domain_name'];
-		$confFile = DaemonConfig::$cfg->APACHE_CUSTOM_SITES_CONFIG_DIR . "/$fqdn.conf";
+		$confFile = DaemonConfig::$cfg->APACHE_CUSTOM_SITES_CONFIG_DIR . "/$fqdn.custom";
 		if (!unlink($confFile)) {
 			$returnOk = false;
 		}
@@ -894,9 +894,8 @@ class DaemonDomainCommon {
 		}
 		$sysUser	= DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF . $domainData['domain_uid'];
 		$sysGroup	= DaemonConfig::$cfg->APACHE_SUEXEC_USER_PREF . $domainData['domain_gid'];
-		$httpGroup	= DaemonConfig::$cfg->APACHE_GROUP;
 
-		$retVal = DaemonCommon::systemCreateDirectory($homeDir, $sysUser, $httpGroup, 0770);
+		$retVal = DaemonCommon::systemCreateDirectory($homeDir, $sysUser, $sysGroup, 0755);
 		if ($retVal!==true){
 			$msg = 'Failed to create '.$homeDir.'!';
 			System_Daemon::warning($msg);
